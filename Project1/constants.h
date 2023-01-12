@@ -9,8 +9,19 @@ namespace myConst
 namespace hiloRules 
 {
 	const unsigned int
-		min_random_number	= 1,
-		max_random_number	= 100,
-		tries				= 7;
+		min_random_number	= 1u,
+		max_random_number	= 100u,
+		tries				= 7u;
 }
+
+namespace students
+{
+	namespace grade
+	{
+		const unsigned int
+			min = 0u,
+			max = 100u;
+	}
+}
+
 #endif // !CONSTANTS_H
