@@ -6,5 +6,9 @@
 * std::ranges::sort(data, std::greater{});
 * for (auto const &i : data) 
 *	std::cout << i << ' ';
+* 
+* Обычные функции могут использовать auto с параметрами.
+* Пример
+* auto sum(auto a, auto b);
 */
 #endif // C++20

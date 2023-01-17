@@ -45,7 +45,7 @@ void sort_bubble_no(int* array, int array_length) {
 }
 
 /*
-* @.'Пузырьковая сортировка' (оптимизированная)
+* @.'Пузырьковая сортировка' (оптимизированная, а работает дольше)
 *	1. Сравнивается элемент массива под индексом [0] с элементом массива под индексом [1].
 *		Если элемент под индексом [0] больше элемента под индексом [1], то значения меняются местами.
 *	2. Затем мы перемещаемся к следующей паре значений: элемент под индексом [1] и элемент под индексом [2]
@@ -67,4 +67,39 @@ void sort_bubble(int* array, int array_lenght) {
 		}
 		if (!swapped) break;
 	}
+}
+
+/*
+* @.'Бинарный поиск' (только в отсортированном массиве)
+*	Смотрим на центральный элемент массива.
+*	Если центральный элемент массива больше элемента, который мы ищем, то всё, что
+*		находится справа от центрального элемента - отбрасываем.
+*	Если центральный элемент меньше элемента, который мы ищем, то 
+*		отбрасываем всё, что находится слева от центрального элемента.
+*	Если центральный элемент равен элементу, который мы ищем, то возвращаем индекс этого элемента.
+*	Если перебрали весь массив и не нашли искомого значения, то возвращаем контрольное значение с
+*		выводом not found
+*/
+
+int binarySearch(int *array, int target, int min, int max) {
+	while (1) {
+		int midpoint = (max + min) / 2;
+		if (array[midpoint] == target) return midpoint;
+		else if (min == max) return -1;
+
+		(array[midpoint] < target) ?
+			min = midpoint + 1 :
+			max = midpoint - 1;
+	}
+}
+
+int binarySearch_recursive(int *array, int target, int min, int max) {
+	int midpoint = (max + min) / 2;
+
+	if (array[midpoint] == target) return midpoint;
+	else if (min == max) return -1;
+	
+	(array[midpoint] < target) ?
+		binarySearch_recursive(array, target, midpoint + 1, max) :
+		binarySearch_recursive(array, target, min, midpoint - 1);
 }
