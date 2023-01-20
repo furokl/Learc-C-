@@ -320,7 +320,6 @@
 *	a) В колоде карт находятся 52 уникальные карты: 13 достоинств (2, 3, 4, 5, 6, 7, 8, 9,
 *		10, Валет, Дама, Король, Туз) и 4 масти (трефы, бубны, червы, пики). Создайте два
 *		перечисления: первое для масти, второе для достоинств карт.
-* 
 *	b) Каждая карта должна быть представлена структурой Card, в которой хранится
 *		информация о достоинстве и масти карты (например, 4 бубны, король трефы).
 *		Создайте эту структуру.
@@ -344,6 +343,208 @@
 *		(например, 2 значит 2, 3 значит 3 и т.д., 10, валет, королева или король — это 10, туз
 *		— это 11).
 *
-*	cv. "blackjack.cpp" "blackjack.h"
+*	см. "blackjack.cpp" "blackjack.h"
 
 #endif // Итоговый тест №6
+
+#ifdef Итоговый тест №8 
+
+* 'Задание 1:'
+*	a) Напишите класс с именем Point. В классе Point должны быть две переменные-
+*		члены типа double: m_a и m_b со значениями по умолчанию 0.0. Напишите
+*		конструктор для этого класса и функцию вывода print().
+*	b) Теперь добавим метод distanceTo(), который будет принимать второй объект
+*		класса Point в качестве параметра и будет вычислять расстояние между двумя
+*		объектами. Учитывая две точки (a1, b1) и (a2, b2), расстояние между ними можно
+*		вычислить следующим образом: sqrt((a1 - a2) * (a1 - a2) + (b1 - b2)
+*		(b1 - b2)). Функция sqrt находится в заголовочном файле cmath.
+*	c) Измените функцию distanceTo() из метода класса в дружественную функцию,
+*		которая будет принимать два объекта класса Point в качестве параметров.
+*		Переименуйте эту функцию на distanceFrom().
+* 
+* class Point
+* {
+*	double m_a, m_b;
+*
+* public:
+*	Point(double a = 0, double b = 0) :
+*		m_a(a), m_b(b)
+*	{
+*	}
+*	Point &print() {
+*		std::cout <<
+*			"a = " << m_a << '\t' <<
+*			"b = " << m_b << '\n';
+*		return *this;
+*	}
+*	double distanceTo(const Point &p) {
+*		return sqrt(
+*			(m_a - p.m_a) * (m_a - p.m_a) +
+*			(m_b - p.m_b) * (m_b - p.m_b));
+*	}
+*	friend double const distanceFrom(const Point &p1, const Point &p2);
+* };
+*
+* double const distanceFrom(const Point &p1, const Point &p2) {
+*	return sqrt(
+*		(p1.m_a - p2.m_a) * (p1.m_a - p2.m_a) +
+*		(p1.m_b - p2.m_b) * (p1.m_b - p2.m_b));
+* }
+*
+* int main() {
+*	Point first;
+*	Point second(2.0, 5.0);
+*	first.print();
+*	second.print().print();
+*	std::cout << "Distance between two points: " << first.distanceTo(second) << '\n';
+*	std::cout << "Distance between two points: " << distanceFrom(first, second) << '\n';
+* }
+* 
+* 
+* 'Задание 2'
+* Напишите деструктор для следующего класса:
+* class Welcome
+* {
+*	char *m_data;
+*
+* public:
+*	Welcome()
+*	{
+*		m_data = new char[14];
+*		const char *init = "Hello World!";
+*		for (int i{}; i < 14; ++i)
+*			m_data[i] = init[i];
+*	}
+*
+*	~Welcome()
+*	{
+*		delete[] m_data;	// вот я
+*	}
+*
+*	const Welcome &print() const {
+*		std::cout << m_data;
+*		return *this;
+*	}
+* };
+*
+* int main() {
+*	Welcome hello;
+*	hello.print();
+* }
+* 
+* 
+* 'Задание 3'
+*	a) Сначала создайте перечисление MonsterType со следующими типами монстров:
+*		Dragon, Goblin, Ogre, Orc, Skeleton, Troll, Vampire и Zombie + добавьте
+*		MAX_MONSTER_TYPES, чтобы иметь возможность подсчитать общее количество
+*		всех перечислителей.
+*	b) Теперь создайте класс Monster со следующими тремя атрибутами
+*		(переменными-членами): тип (MonsterType), имя (std::string) и количество здоровья
+*		(int).
+*	c) Перечисление MonsterType является специфичным для Monster, поэтому
+*		переместите его внутрь класса под спецификатор доступа public.
+*	d) Создайте конструктор, который позволит инициализировать все переменные-
+*		члены класса.
+*	e) Теперь нам нужно вывести информацию про нашего монстра. Для этого нужно
+*		конвертировать MonsterType в std::string. Добавьте функцию getTypeString(),
+*		которая будет выполнять конвертацию, и функцию вывода print().
+*	f) Теперь мы уже можем создать сам генератор монстров. Для этого создайте
+*		статический класс MonsterGenerator и статический метод с именем
+*		generateMonster(), который будет возвращать случайного монстра. Пока что
+*		возвратом метода пускай будет анонимный объект: (Monster::Orc, "Jack", 90).
+*	g) Теперь MonsterGenerator должен генерировать некоторые случайные атрибуты.
+*		Для этого нам понадобится генератор случайного числа. Воспользуйтесь следующей
+*		функцией:
+*	h) Теперь измените функцию generateMonster() для генерации случайного
+*		MonsterType (между 0 и Monster::MAX_MONSTER_TYPES-1) и случайного
+*		количества здоровья (от 1 до 100). Это должно быть просто. После того, как вы это
+*		сделаете, определите один статический фиксированный массив s_names размером
+*		6 элементов внутри функции generateMonster() и инициализируйте его 6-ю любыми
+*		именами на ваш выбор. Добавьте возможность выбора случайного имени из этого
+*		массива.
+* 
+*	#include <iostream>
+*
+*	class Monster
+*	{
+*	public: 
+*		const enum MonsterType 
+*		{
+*			Dragon,
+*			Goblin,
+*			Ogre,
+*			Orc,
+*			Skeleton,
+*			Troll,
+*			Vampire,
+*			Zombie,
+*			MAX_MONSTER_TYPE
+*		};
+*	
+*	private:
+*		const MonsterType m_type;
+*		const std::string m_name;
+*		int m_health;
+*
+*	public:
+*		Monster(const MonsterType type, const std::string name, int health)
+*			: m_type(type), m_name(name), m_health(health)
+*		{
+*		}
+*
+*		std::string getTypeString() const {
+*			switch (m_type)
+*			{
+*			case Dragon:	return "Dragon";
+*			case Goblin:	return "Goblin";
+*			case Ogre:		return "Ogre";
+*			case Orc:		return "Orc";
+*			case Skeleton:	return "Skeleton";
+*			case Troll:		return "Troll";
+*			case Vampire:	return "Vampire";
+*			case Zombie:	return "Zombie";
+*			}
+*		}
+*
+*		const Monster& print() const {
+*			std::cout <<
+*				m_name << " is the " <<
+*				getTypeString() << " has " <<
+*				m_health << " health points." << '\n';
+*			return *this;
+*		}
+*	};
+*
+*	class MonsterGenerator
+*	{
+*	private:
+*		static const std::string s_names[6];
+*
+*	public:
+*		static int getRandomNumber(int min, int max) {
+*			return rand() % max + min;
+*		}
+*		static Monster generateMonster() {
+*			return Monster(
+*				static_cast<Monster::MonsterType>(getRandomNumber(0, Monster::MAX_MONSTER_TYPE)),
+*				s_names[getRandomNumber(0, 6)],
+*				getRandomNumber(1, 100)
+*			);
+*		}
+*	};
+*
+*	const std::string MonsterGenerator::s_names[6] = { "Furokl", "Kyahta", "Nasty", "Umka", "God", "Pigmey" };
+*
+*	int main() {
+*		srand(0);
+*		Monster *m = new Monster[1]{ MonsterGenerator::generateMonster() };
+*		for (int i{}; i < 100; ++i) {
+*			Monster m = MonsterGenerator::generateMonster();
+*			m.print();
+*		}
+*		return 0;
+*	}
+
+#endif // DEBUG
+
+
