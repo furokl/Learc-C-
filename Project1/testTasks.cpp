@@ -547,4 +547,80 @@
 
 #endif // DEBUG
 
+#ifdef Итоговый тест №9
+/*
+* 'Задание 1'
+* Напишите класс Average, который будет вычислять среднее значение всех
+	передаваемых ему целых чисел. Используйте два члена: первый должен быть типа
+	int32_t и использоваться для вычисления суммы всех передаваемых чисел, второй
+	должен быть типа int8_t и использоваться для вычисления количества
+	передаваемых чисел. Чтобы найти среднее значение, нужно разделить сумму на
+	количество.
+* Следующий код функции main():
+*	int main() {
+*		Average avg;
+* 		avg += 5;
+*		std::cout << avg << '\n';
+*
+*		avg += 9;
+*		std::cout << avg << '\n';
+*
+*		avg += 19;
+*		std::cout << avg << '\n';
+*
+*		avg += -9;
+*		std::cout << avg << '\n';
+*
+*		(avg += 7) += 11;
+*		std::cout << avg << '\n';
+*
+*		Average copy = avg;
+*		std::cout << copy << '\n';
+*	}
+* Должен выдавать следующий результат:
+*	5
+*	7
+*	11
+*	6
+*	7
+*	7
+* 
+* 
+*	class Average 
+*	{
+*	private:
+*		int32_t m_sum;
+*		int8_t m_count;
+*
+*	public:
+*		Average()
+*			: m_sum{}, m_count{}
+*		{
+*			std::cout << "\t*Init*\n";
+*		}
+*
+*		// Не требуется
+*		Average(const Average &avg)
+*			: m_sum(avg.m_sum), m_count(avg.m_count)
+*		{
+*			std::cout << "\t*Copy*\n";
+*		}
+*
+*		Average& operator+=(int value);
+*		friend std::ostream &operator<< (std::ostream &out, Average &avg);
+*	};
+* 
+*	Average& Average::operator+= (int value) {
+*		m_sum += value;
+*		++m_count;
+*		return *this;
+*	}
+*
+*	std::ostream &operator<< (std::ostream &out, Average &avg) {
+*		out << (double)avg.m_sum / avg.m_count;
+*		return out;
+*	}
+*/
+#endif // Итоговый тест №9
+
 

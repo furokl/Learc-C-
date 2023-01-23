@@ -3415,22 +3415,447 @@
 
 #endif // Измерение времени выполнения (тайминг) кода
 
+#ifdef Перегрузка операторов
+
+*	! Почти любой оператор может быть перегружен, кроме: 
+*		?:	sizeof	 ::	 .	 .*
+*	! Можете перегрузить только существующие операторы.
+*	! По крайней мере один из операндов перегруженного оператора должен быть
+*		'пользовательского типа' данных.
+*	! Изначальное количество операндов, поддерживаемых оператором, изменить невозможно.
+*	! Все операторы сохраняют свой 'приоритет и ассоциативность' по умолчанию.
+*
+* !.'Правило:' При перегрузке операторов старайтесь максимально приближенно сохранять функционал
+*		операторов в соответствии с их первоначальными применениями.
+* 
+* 'Вызов перегруженных операторов'
+* Действия компилятора:
+*	1. Если все операнды являются фундаментальных типов данных, то вызывать следует
+*		встроенные соответствующие версии операторов (если таковые существуют).
+*		Если таких не существует, то компилятор выдаст ошибку.
+*	2. Если какой-либо из операндов является пользовательского типа данных, то компилятор
+*		ищет версию оператора, которая работает с таким типом данных. Если компилятор не найдет
+*		подходящего, то попытается выполнить конвертацию одного или нескольких операндов
+*		пользовательского типа данных в фундаментальные типы данных, чтобы таким образом он мог
+*		использовать соотвествующий встроенный оператор. Если это не сработает - комплитор 
+*		выдаст ошибку.
+* 
+* 
+* @.'Перегрузка операторов через дружественные функции'
+*	Для перегрузки бинарных операторов, которые не изменяют левый операнд
+*	+ Имеем прямой доступ ко всем членам класса, с которым работаем.
+*	! Ограничения, не может быть:	=	[]	()	->	(уже через методы класса - требования языка С++)
+* Пример operator+
+* class Dollars
+* {
+*	int m_dollars;
+* public:
+*	Dollars(int dollars) { m_dollars = dollars; }
+*	// Dollars + Dollars через дружественную функцию
+*	friend Dollars operator+(const Dollars &d1, const Dollars &d2);
+*	int getDollars() const { return m_dollars; }
+* };
+* 
+* Dollars operator+(const Dollars &d1, const Dollars &d2) {
+*	return Dollars(d1.m_dollars + d2.m_dollars);
+* }
+* 
+* 
+* @.'Перегрузка операторов через обычные функции'
+*	Для перегрузки бинарных операторов, которые не изменяют левый операнд
+*	Когда не нужен доступ к членам определенного класса (геттеры)
+* Пример operator+
+* class Dollars
+* {
+*	int m_dollars;
+* public:
+*	Dollars(int dollars) { m_dollars = dollars; }
+*	int getDollars() const { return m_dollars; }
+* };
+* 
+* Dollars operator+(const Dollars &d1, const Dollars &d2) {
+*	return Dollars(d1.getDollars() + d2.getDollars());
+* }
+* 
+* !.'Правило:' Используйте перегрузку операторов через обычные функции, вместо дружественных,
+*		если для этого не требуется добавлнение дополнительных функций в класс.
+* 
+* 
+* @.'Перегрузка операторов через методы класса'
+*	При работе с 'бинарными операторами', которые 'изменяют ЛЕВЫЙ операнд' 
+*		и с 'унарными операторами'.
+*	Также =	[]	()	->
+*	Похожа на дружественные функции, НО
+*		левым операндом становится неявный объект, на который указывает *this
+*	(не нужно писать две версии: Dollars + int / int + Dollars)
+* Пример operator+
+* class Dollars
+* {
+*	int m_dollars;
+* public:
+*	Dollars(int dollars) { m_dollars = dollars; }
+*	// Dollars + int
+*	Dollars operator+(int value);
+*	int getDollars() const { return m_dollars; }
+* };
+* 
+* Dollars Dollars::operator+(int value) {
+*	return Dollars(m_dollars + value);
+* }
+* 
+* 
+* 'Перегрузка операторов ввода и вывода'
+* Пример operator<< 
+* (через дружественную)
+* class Point
+* {
+*	double m_x, m_y, m_z;
+* public:
+*	Point(double x = 0.0, double y = 0.0, double z = 0.0)
+*		: m_x(x), m_y(y), m_z(z)
+*	{
+*	}
+*	friend std::ostream& operator<< (std::ostream &out, const Point &point);
+* };
+* 
+* // Я вижу здесь аналогию с *this
+* std::ostream& operator<< (std::ostream &out, const Point &point) {
+*	out << "Point(" << point.m_x << ", " << point.m_y << ", " << point.m_z << ')';
+*	return out;
+* }
+* 
+* Пример operator>> 
+* (через дружественную)
+* class Point
+* {
+*	double m_x, m_y, m_z;
+* public:
+*	Point(double x = 0.0, double y = 0.0, double z = 0.0)
+*		: m_x(x), m_y(y), m_z(z)
+*	{
+*	}
+*	friend std::ostream& operator>> (std::istream &in, Point &point);
+* };
+* 
+* std::ostream& operator>> (std::istream &in, Point &point) {
+*	in >> point.m_x;
+*	in >> point.m_y;
+*	in >> point.m_z;
+*	return in;
+* }
+* 
+* 
+* 'Перегрузка унарных операторов +, - и логического НЕ'
+* (через метод)
+* Пример operator-
+* class Dollars
+* {
+*	int m_dollars;
+* public:
+*	Dollars(int dollars) { m_dollars = dollars; }
+*	// -Dollars
+*	Dollars operator-() const;
+*	int getDollars() const { return m_dollars; }
+* };
+* 
+* Dollars dollars::operator-() const {
+*	return Dollars(-m_dollars);
+* }
+* 
+* 
+* 'Перегрузка операторов сравнения'
+* (через дружественную)
+* Пример operator==
+* class Car
+* {
+*	std::string m_company;
+*	std::string m_model;
+* public:
+*	Car(std::string company, std::string model)
+*		: m_company(company), m_model(model)
+*	{
+*	}
+*	
+*	friend bool operator== (const Car &c1, const Car &c2);
+* };
+* 
+* bool operator== (const Car &c1, const Car &c2) {
+*	return (c1.m_company == c2.m_company &&
+*			c1.m_model == c2.m_model);
+* }
+* 
+* 
+* 'Перегрузка операторов инкремента и декремента'
+* (через метод)
+* Пример operator++
+*	! Для версии постфикс С++ использует 'фиктивный параметр', лишь для одной цели:
+*		отличить префикс и постфикс версии.
+* class Number
+* {
+*	int m_number;
+* public:
+*	Number(int number = 0)
+*		: m_number(number)
+*	{
+*	}
+*	Number& operator++(); // префикс
+*	Number& operator++(int); // постфикс
+* };
+* 
+* Number& Number::operator++() {
+*	if (m_number == 8) m_number = 0;
+*	else ++m_number;
+*	return *this;
+* }
+* 
+* Number& Number::operator++(int) {
+*	Number temp(m_number);
+*	// Используем оператор инкремента 'префикс', для реализации перегрузки инкремента 'постфикс'
+*	++(*this);
+*	return temp;
+* }
+* 
+* 
+* 'Перегрузка оператора индексации []'
+*	! Возврат по ссылке
+*	! Не используйте указатель на объекты
+* (через метод)
+* Пример
+* class IntArray
+* {
+*	int m_array[10];
+* public:
+*	int& operator[] (const int index);			// присваивание и просмотр
+*	const int& operator[] (const int index);	// только для просмотра
+* };
+* 
+* int& IntArray::operator[] (const int index) {
+*	return m_array[index]
+* }
+* const int& IntArray::operator[] (const int index) {
+*	return m_array[index]
+* }
+* 
+*	Почему по ссылке?
+*	IntArray array;
+*	array[4] = 5;
+*	//
+*	[] выше приоритет чем =
+*	1. компилятор: array[4].array[4] - вызов функции перегрузки оператора []
+*	2. возврат: array.m_array[4], поскольку по ссылке - вернет фактический элемент array.m_array[4]
+*	3. обработанное: array.m_array[4] = 5
+*	m_array[4] - l-values (имеет адрес памяти) => проблем нет.
+*	Если по значению:
+*	2. Если m_array[4] является 7, то фактически получаем 7.array[4] = 5
+*	7 = 5 - бессмыслица!
+* 
+*	//
+*	Указатель на объекты:
+*	IntArray *array = new IntArray;
+*	array[4] = 5 // ошибка, указатель = адрес памяти, а ни значение.
+*	(*array)[4] = 5 // правильно, но ужасно
+* 
+* 
+* 'Перегрузка оператора ()'
+*	! Может изменять несколько параметров
+*	! В случае с классами перегрузка круглых скобок выполняется в operator()(){}
+*	! Как правило, используются для доступа к двумерным массивам или возврата подмножеств одномерного массива.
+* (через метод)
+* Пример
+* class Matrix
+* {
+*	double data[5][5];
+* public:
+*	double& operator()(int row, int col);
+*	const double& operator()(int row, int col) const;
+*	void operator()();
+* };
+* 
+* double& Matrix::operator()(int row, int col) {
+*	assert(col >= 0 && col < 5);
+*	assert(row >= 0 && row < 5);
+*	return data[row][col];
+* }
+* const double& Matrix::operator()(int row, int col) const {
+*	assert(col >= 0 && col < 5);
+*	assert(row >= 0 && row < 5);
+*	return data[row][col];
+* }
+* void Matrix::operator()() {
+*	for (int row=0; row < 5; ++row)
+*		for (int col=0; col < 5; ++col)
+*			data[row][col] = 0.0;
+* }
+* 
+* 
+* 'Перегрузка функтора'
+*	! Работают как функции
+*	! Могут хранить данные в переменных-членах
+* (через метод)
+* Пример
+* class Accumulator
+* {
+*	int m_counter = 0;
+* public:
+*	int operator() (int i) { return (m_counter += i); }
+* };
+* 
+* 
+* 'Перегрузка операции преобразования значений'
+*	! Внимание на пробел между operator и int()
+*	! Не имеет типа возврата (предполагается, что возвращаете корректный тип)
+* (через метод)
+* Пример
+* class Dollars {
+*	int m_dollars;
+* public:
+*	operator int() { return m_dollars; }
+* };
+* Еще пример
+* class Cents {
+*	int m_cents;
+* public:
+*	operator Dollars() { return Dollars(m_cents / 100); }
+* };
+* 
+* 
+* 'Перегрузка оператора присваивания'
+* 'Присваивание vs Конструктор копирования'
+*	! Оба копируют значение одного объекта в другой, однако
+*		Конструктор копирования - инициализация новых объектов
+*		Оператор присваивания - заменяет содержимое уже существующих объектов
+*	! Осуществите проверку на самоприсваивание
+*	! По умолчанию 'почленное копирование'
+*		В работе с динамической памятью следует писать свою реализацию.
+* Пример
+* class Drob {
+*	int m_numerator;
+*	int m_denominator;
+* public:
+*	Drob& operator= (const Drob &drob) {
+*		// проверка на самоприсваивание
+*		if (this == &drob)
+*			return *this;
+*		
+*		// Выполняем копирование значений
+*		m_numerator = drob.m_numerator;
+*		m_denominator = drob.m_denominator;
+* 
+*		// Возвращаем текущий объект
+*		return *this;
+*	}
+
+#endif // Перегрузка операторов
+
+#ifdef Конструктор копирования
+
+* @.'Конструктор копирования' - особый тип конструктора, который используется для создания нового
+*		объекта через копирование существующего объекта.
+*	! Можно предотвратить копирования, поместив его в private
+*	! Может игнорироваться компилятором
+*	! По умолчанию 'почленная инициализация'
+*		В работе с динамической памятью следует писать свою реализацию.
+* Пример
+* class drob {
+*	int m_numerator;
+*	int m_denominator;
+* public:
+*	// Конструктор по умолчанию
+*	Drob(int numerator = 0, int denominator = -1) :
+*		m_numerator(numerator), m_denominator(denominator)
+*	{
+*		assert(denominator != 0);
+*	}
+*	// Конструктор копирования
+*	Drob(const Drob &drob) :
+*		m_numerator(drob.m_numerator), m_denominator(drob.m_denominator)
+*	{
+*		std::cout << "Copy constructor\n";
+*	}
+* };
+* 
+* 'Игнорирование компилятором'
+* // Используя класс выше, вызываем
+*	Drob sixSeven(Drob(6, 7));
+* Пытаемся:
+*	1. Инициализировать анонимный объект Drob => вызов конструктора Drob(int, int)
+*	2. Использовать конструктор копирования с анонимным объектом для инициализации sixSeven
+* Результат:
+*	Поскольку результат точно такой же, как при прямой инициализации,
+*		компилятор проигнорирует копирование.
+*		(Это называется @.'Элизия')
+*	Drob sixSeven(6, 7); // изменено компилятором, прямая инициализация
+* 
+* 
+* 'Копирующая инициализация'
+* Пытаемся:
+*	Drob seven = Drob(7);
+* Реальный вызов:
+*	Drob seven(Drob(7)); // Обработка компилятора
+*		? вызывается конструктор по умолчанию Drob(int; int)
+*		? вызывается конструктор копирования Drob(const Drob&)
+* 
+* Передаем по значению:
+* // В этом случае все ок
+* Drob makeNegative(Drob d) {
+*	d.setNumerator(-d.getNumerator());
+*	return d;
+* }
+* int main() {
+*	Drob sixSeven(6, 7);
+*	std::cout << makeNegative(sixSeven);
+* }
+* // Но также может игнорироваться
+* class Something {};
+* Something boo() {
+*	Something x;
+*	return x;
+* }
+* int main() {
+*	Something x = boo();
+* }
+* 
+* !.'Правило:' Избегайте использования копирующей инициализации при работе с классами,
+*		вместо нее используйте uniform-инициализацию.
+* 
+* 
+* @.'Конструкторы преобразования' - конструкторы которые используются в неявных преобразованиях
+* @.'explicit' - ключевое слово, делает конструктор закрытым для выполнения 
+*		любых неявных преобразований
+* Пример
+* class SomeString {
+*	std::string m_string;
+* public:
+*	explicit SomeString(int a) {
+*		m_string.resize(a);
+*	}
+*	SomeString(const char *string) {
+*		m_string = string;
+*	}
+* };
+* 
+* Также для предотвращения использования метода/перегруженных операторов можем использовать delete.
+* Пример
+* public:
+*	SomeString(char) = delete; // любое использование этого конструктора приведет к ошибке
+* 
+* !.'Правило:' Для предотвращения возникновения ошибок с неявными конвертациями делайте ваши
+*		конструкторы явными, используя ключевое слово explicit
+
+#endif // Конструктор копирования
 
 #include <iostream>
-//#include <string>
-//#include <algorithm>
-//#include <chrono>
-//#include <cstdlib>
-//#include <cstring>
-//#include <array>
-//#include <ranges>
-//#include <vector>
-//#include <random>
-//#include <functional>
-//#include "constants.h"
-//#include <fstream>
-//#include <cstdarg>
-//#include <cassert>
-//#include <cmath>
-
-int main() {}
+#include <string>
+#include <algorithm>
+#include <chrono>
+#include <cstdlib>
+#include <cstring>
+#include <array>
+#include <ranges>
+#include <vector>
+#include <random>
+#include <functional>
+#include <fstream>
+#include <cstdarg>
+#include <cassert>
+#include <cmath>
