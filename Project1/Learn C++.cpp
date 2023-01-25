@@ -4409,7 +4409,7 @@
 *	Parent *p = getObject(true);
 *	Child *ch = dynamic_cast<Child*>(p);
 *	if (ch) // проверка на нулевой указатель
-*		std::cout << "The name of the Child is: << ch->getName() << '\n';
+*		std::cout << "The name of the Child is: " << ch->getName() << '\n';
 *	delete p;
 * }
 * 
