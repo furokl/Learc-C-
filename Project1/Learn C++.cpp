@@ -4441,7 +4441,7 @@
 *	Parent *p = getObject(true);
 *	if (p->getClassID() == CHILD) {
 *		Child *ch = static_cast<Child*>(p);
-*		std::cout << "The name of the Child is: << ch->getName() << '\n';
+*		std::cout << "The name of the Child is: " << ch->getName() << '\n';
 *	}
 *	delete p;
 * }
