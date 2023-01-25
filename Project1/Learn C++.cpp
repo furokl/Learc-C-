@@ -3410,7 +3410,7 @@
 * 
 *	Timer t;
 *	std::sort(array.begin(), array.end());
-*	std::cout << "Time taken: << t.elapsed() << '\n';
+*	std::cout << "Time taken: " << t.elapsed() << '\n';
 * }
 
 #endif // Измерение времени выполнения (тайминг) кода
