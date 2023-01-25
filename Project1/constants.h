@@ -24,4 +24,18 @@ namespace students
 	}
 }
 
+namespace game
+{
+	const int win = 20;
+
+	namespace player
+	{
+		const char symbol = '@';
+		const int health = 10;
+		const int damage = 1;
+		const int gold = 0;
+		const int level = 1;
+	}
+}
+
 #endif // !CONSTANTS_H

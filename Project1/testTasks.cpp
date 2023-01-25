@@ -548,15 +548,15 @@
 #endif // DEBUG
 
 #ifdef Итоговый тест №9
-/*
-* 'Задание 1'
-* Напишите класс Average, который будет вычислять среднее значение всех
-	передаваемых ему целых чисел. Используйте два члена: первый должен быть типа
-	int32_t и использоваться для вычисления суммы всех передаваемых чисел, второй
-	должен быть типа int8_t и использоваться для вычисления количества
-	передаваемых чисел. Чтобы найти среднее значение, нужно разделить сумму на
-	количество.
-* Следующий код функции main():
+
+* 'Задание 2'
+*	Напишите класс Average, который будет вычислять среднее значение всех
+*		передаваемых ему целых чисел. Используйте два члена: первый должен быть типа
+*		int32_t и использоваться для вычисления суммы всех передаваемых чисел, второй
+*		должен быть типа int8_t и использоваться для вычисления количества
+*		передаваемых чисел. Чтобы найти среднее значение, нужно разделить сумму на
+*		количество.
+*	Следующий код функции main():
 *	int main() {
 *		Average avg;
 * 		avg += 5;
@@ -577,14 +577,8 @@
 *		Average copy = avg;
 *		std::cout << copy << '\n';
 *	}
-* Должен выдавать следующий результат:
-*	5
-*	7
-*	11
-*	6
-*	7
-*	7
 * 
+* _______________________________________
 * 
 *	class Average 
 *	{
@@ -620,7 +614,268 @@
 *		out << (double)avg.m_sum / avg.m_count;
 *		return out;
 *	}
-*/
+* 
+* 
+* 'Задание 3'
+* Напишите свой собственный класс-массив целых чисел IntArray (не используйте
+*	std::array или std::vector). Пользователи должны передавать размер массива при
+*	создании объекта этого класса, а сам массив (переменная-член) должен выделяться
+*	динамически. Используйте стейтменты assert для проверки передаваемых
+*	значений, а также свой конструктор копирования и перегрузку оператора
+*	присваивания, если это необходимо, чтобы следующий код:
+*	
+*	IntArray fillArray() {
+*		IntArray a(6);
+*		a[0] = 6;
+*		a[1] = 7;
+*		a[2] = 3;
+*		a[3] = 4;
+*		a[4] = 5;
+*		a[5] = 8;
+*		return a;
+*	}
+*
+*	int main() {
+*		IntArray a = fillArray();
+*		std::cout << a << '\n';
+*			
+*		IntArray b(1);
+*		a = a;
+*		b = a;
+*		
+*		std::cout << b << '\n';
+*		
+*		IntArray c(b);
+*		std::cout << c << '\n';
+*	
+*		a[3] = 0;
+*		b[4] = 0;
+*		c[5] = 0;
+*		std::cout << a << b << c << '\n';
+*	}
+* 
+* _______________________________________
+* 
+*	class IntArray
+*	{
+*	private:
+*		size_t m_length;
+*		int* array;
+*
+*		void initialized() {
+*			array = new (std::nothrow) int[m_length];
+*			assert(array != nullptr);
+*		}
+*
+*		void clear() {
+*			delete[] array;
+*			array = nullptr;
+*		}
+*
+*		void copy(const IntArray &intArray) {
+*			for (size_t index{}; index < m_length; ++index)
+*				array[index] = intArray.array[index];
+*		}
+*		
+*	public:
+*		IntArray(size_t length)
+*			: m_length(length)
+*		{
+*			initialized();
+*		}
+*		
+*		~IntArray() 
+*		{
+*			clear();
+*		}
+*		
+*		IntArray(const IntArray &intArray) 
+*		{
+*			m_length = intArray.m_length;
+*			initialized();
+*			copy(intArray);
+*		}
+*		IntArray &operator= (const IntArray &intArray) {
+*			if (this == &intArray)
+*				return *this;
+*				
+*			m_length = intArray.m_length;
+*			clear();
+*			initialized();
+*			copy(intArray);
+*		}
+*		auto &operator[] (const int index) {
+*			return array[index];
+*		};
+*		friend std::ostream &operator<< (std::ostream &out, IntArray &intArray) {
+*			auto begin{ &intArray.array[0] };
+*			auto end{ begin + intArray.m_length };
+*			for (auto ptr = begin; ptr != end; ++ptr) {
+*				out << *ptr << " ";
+*			}
+*			out << '\n';
+*			return out;
+*		}
+*	};
+
 #endif // Итоговый тест №9
+
+#ifdef Итоговый тест №10
+
+* 'Задание 1'
+*	a) Создайте классы Apple и Banana, которые наследуют класс Fruit. У класса Fruit есть
+*		две переменные-члены: name и color.
+*	b) Добавьте новый класс GrannySmith, который наследует класс Apple.
+*	Следующий код:
+*	int main() {
+*		Apple a("red");
+*		Banana b;
+*		GrannySmith c;
+*
+*		std::cout << a;
+*		std::cout << b;
+*		std::cout << c;
+*	};
+* 
+* _______________________________________
+* 
+* class Fruit
+* {
+* private:
+* 	std::string name;
+* 	std::string color;
+* 
+* public:
+* 	Fruit(std::string color, std::string name)
+* 	{
+* 		this->color = color;
+* 		this->name = name;
+* 	}
+* 
+* 	std::string getName() const { return name; }
+* 	std::string getColor() const { return color; }
+* 	friend std::ostream &operator<<(std::ostream &out, const Fruit &fruit);
+* };
+* 
+* std::ostream &operator<<(std::ostream &out, const Fruit &fruit) {
+* 	out << "My " << fruit.name << " is " << fruit.color << '\n';
+* 	return out;
+* }
+* 
+* class Apple : public Fruit
+* {
+* public:
+* 	Apple(std::string color = "green", std::string name = "Apple")
+* 		: Fruit(color, name)
+* 	{
+* 	}
+* };
+* 
+* class Banana : public Fruit
+* {
+* public:
+* 	Banana(std::string color = "yellow", std::string name = "Banana")
+* 		: Fruit(color, name)
+* 	{
+* 	}
+* };
+* 
+* class GrannySmith: public Apple
+* {
+* public:
+* 	GrannySmith(std::string color = "green", std::string name = "Granny Smith apple")
+* 		: Apple(color, name)
+* 	{
+* 	}
+* };
+* 
+* 
+* 'Задание 2'
+* Текстовая игра про монстров
+* 
+* #include "PlayerController.h"
+* 
+* int main() {
+*	PlayerController player;
+*	Monster monster;
+*	std::cout << std::boolalpha;
+*	while (!player.hasWon() && !player.isDead())
+*	{
+*		player.playerTurn(monster);
+*	}
+*	std::cout << "\n\n\n" <<
+*		"Gold: " << player.getGold() << '\n' <<
+*		"Level: " << player.getLevel() << '\n' <<
+*		"Thank you, " << player.getName() << '!' << std::endl;
+* }
+
+#endif // Итоговый тест №10
+
+#ifdef Итоговый тест №12
+
+* 'Задание 1'
+* a) Создайте абстрактный класс Shape. Этот класс должен иметь три метода:
+*	чистую виртуальную функцию print() с параметром типа std::ostream;
+*	перегрузку operator<<;
+*	пустой виртуальный деструктор.
+* 
+* b) Создайте два класса: Triangle и Circle, которые наследуют класс Shape.
+*	Triangle должен иметь 3 точки в качестве переменных-членов.
+*	Circle должен иметь одну центральную точку и целочисленный радиус в
+*	качестве переменных-членов.
+* 
+* c) Используя код из предыдущих заданий (классы Point, Shape, Circle и Triangle)
+*	завершите следующую программу:
+*	int main() {
+*		std::vector<Shape*> v;
+*		v.push_back(new Circle(Point(1, 2, 3), 7));
+*		v.push_back(new Triangle(Point(1, 2, 3), Point(4, 5, 6), Point(7, 8, 9)));
+*		v.push_back(new Circle(Point(4, 5, 6), 3));
+*
+*		// Вывод элементов вектора v здесь
+*
+*		std::cout << "The largest radius is: " << getLargestRadius(v) << '\n';
+*		 // реализуйте эту функцию
+*
+*		// Удаление элементов вектора v здесь
+*	}
+* 
+*	_______________________________________
+* 
+*	#include "Circle.h"
+*	#include "Triangle.h"
+*	
+*	int getLargestRadius(const std::vector<Shape *> &v) {
+*		int largestRadius{};
+*		for (auto const &el : v)
+*		{
+*			if (Circle *c = dynamic_cast<Circle *>(el))
+*			{
+*				if (c->getRadius() > largestRadius)
+*					largestRadius = c->getRadius();
+*			}
+*		}
+*	
+*		return largestRadius;
+*	}
+*	
+*	int main() {
+*		std::vector<Shape*> v;
+*		v.push_back(new Circle(Point(1, 2, 3), 7));
+*		v.push_back(new Circle(Point(4, 5, 6), 3));
+*		v.push_back(new Triangle(Point(1, 2, 3), Point(4, 5, 6), Point(7, 8, 9)));
+*	
+*		for (auto const &el : v)
+*			std::cout << *el << '\n';
+*	
+*		std::cout << "The largest radius is: " << getLargestRadius(v) << '\n';
+*	
+*		for (auto const &el : v)
+*			delete el;
+*	}
+
+#endif // Итоговый тест №12
+
+
 
 

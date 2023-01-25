@@ -80,4 +80,87 @@
 * 	p.moveByVector(v);
 * 	p.print();
 * }
+*
+*
+* 'Список инициализации' std::initializer_list<int>
+* 'Задание 1'
+* Написать класс ArrayInt, чтобы следующий код:
+* int main() {
+*	ArrayInt array{ 7, 6, 5, 4, 3, 2, 1 };
+*
+*	for (int count{}; count < array.getLength(); ++count)
+*		std::cout << array[count] << ' ';
+*		
+*	std::cout << '\n';
+*
+*	array = { 1, 4, 9, 12, 15, 17, 19, 21 };
+*
+*	for (int count{}; count < array.getLength(); ++count)
+*		std::cout << array[count] << ' ';
+* }
+* отработал без ошибок.
+* 
+* _______________________________________
+*
+* class ArrayInt
+* {
+* private:
+*	int m_length;
+*	int *m_data;
+*
+* public:
+* 	ArrayInt()
+* 		: m_length(0), m_data(nullptr)
+* 	{
+* 	}
+* 	~ArrayInt()
+* 	{
+* 		delete[] m_data;
+* 		m_data = nullptr;
+* 	}
+* 	ArrayInt(int length)
+* 		: m_length(length)
+* 	{
+* 		m_data = new (std::nothrow) int[length];
+* 		assert(m_data != nullptr);
+* 	}
+* 	ArrayInt(const std::initializer_list<int> &list) 
+* 		: ArrayInt(list.size())
+* 	{
+* 		int i{};
+* 		for (auto &el : list)
+* 		{
+* 			m_data[i] = el;
+* 			++i;
+* 		}
+* 	}
+* 	ArrayInt& operator= (const std::initializer_list<int> &list) 
+* 	{
+* 		if (list.size() != static_cast<size_t>(m_length))
+* 		{
+* 			delete[] m_data;
+* 			m_length = list.size();
+* 			m_data = new int[m_length];
+* 		}
+* 
+* 		int i{};
+* 		for (auto &el : list)
+* 		{
+* 			m_data[i] = el;
+* 			++i;
+* 		}
+* 
+* 		return *this;
+* 	}
+* 	int &operator[] (int index) {
+* 		assert(index >= 0 && index < m_length);
+* 		return m_data[index];
+* 	}
+* 	int getLength() const {
+* 		return m_length;
+* 	}
+* };
+
+
+
 #endif // Различные задачи
