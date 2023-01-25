@@ -4029,7 +4029,7 @@
 *		void report(Animal &rAnimal) {
 *			std::cout << rAnimal.getName() << " says " << rAnimal.speak() << '\n';
 *		}
-*	2. Хотим сохранить все Child'ы в массиве (а в массиве объекты одного типа)!
+*	2. Хотим сохранить все Child в массиве (а в массиве объекты одного типа)!
 *		Dog barsik("Barsik"), tolik("Tolik"), tyzik("Tyzik");
 *		Cat matros("Matros"), ivan("Ivan"), martun("Martun");
 *		Animal *animals[] = { &matros, &ivan, &martun, &barsik, &tolik, &tyzik};
