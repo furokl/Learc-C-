@@ -876,6 +876,47 @@
 
 #endif // Итоговый тест №12
 
+#ifdef Итоговый тест №13
+/*
+* 'Задание 1'
+* Реализуйте класс Pair, который позволяет пользователю использовать разные типы
+*	данных в передаваемых парах
+* 
+* 'Задание 2'
+* Напишите шаблон класса StringValuePair, в котором первое значение всегда
+*	является типа string, а второе может быть любого типа. Этот шаблон класса должен
+*	наследовать частично специализированный класс Pair (в котором первый параметр
+*	типа std::string, а второй — «любой тип данных»).
+* 
+*	template <class T1, class T2>
+*	class Pair
+*	{
+*	private:
+*		T1 m_p1;
+*		T2 m_p2;
+* 
+*	public:
+*		Pair(const T1 &p1, const T2 &p2)
+* 			: m_p1(p1), m_p2(p2)
+* 		{
+* 		}
+* 
+*	 	const T1& first() const { return m_p1; }
+*		const T2& second() const { return m_p2; }
+*	};
+* 
+*	template <class T1>
+*	class StringValuePair: public Pair<std::string, T1>
+*	{
+*	public:
+* 		StringValuePair(const std::string &key, const T1 &value)
+* 			: Pair<std::string, T1>(key, value)
+* 		{
+* 		}
+*	};
+*/
+#endif // Итоговый тест №13
+
 
 
 

@@ -4512,6 +4512,182 @@
 
 #endif // Вывод объектов классов через оператор вывода
 
+#ifdef Шаблоны
+
+* @.'Шаблон функций' - функции, которые служат образцом для создания других подолбных функций.
+*	! Определение шаблона функции
+*	! Указать, что T является типом параметра шаблона функции
+*	# Могут быть классами, поэтому параметры лучше сделать const ссылками
+* Недостатки:
+*	Непонятные сообщения об ошибках
+*	Увеличивают время компиляции и размер кода
+* Преимущество:
+*	Экономят много времени
+* 
+* Пример
+* template <typename T>
+* T max(T a, T b) {
+*	return (a > b) ? a : b;
+* }
+* 
+* 'Если несколько типов параметров'
+* Пример
+* template <typename T1, typename T2>
+* 
+* 'Тип может быть классом'
+*	Поэтому параметры лучше сделать константными ссылками
+* Пример
+* template <typename T>
+* const T& max(const T& a, const T& b) {
+*	return (a > b) ? a : b;
+* }
+* 
+* 
+* @.'Шаблон классов' - раболтает точно так же, как и шаблоны функций.
+*	Копирует шаблон класса, заменяя типы параметров шаблона класса на фактические
+*		(передаваемые) типы данных, а затем компилирует эту копию.
+*	std::vector<int>
+*		std::vector - это шаблон класса
+*		int - передаваемый тип данных
+*	
+*
+* 'Проблема многофайловости'
+* 
+* Пример (внимание на getLength(); )
+* template <class T>
+* class Array
+* {
+* private:
+* 	int m_length;
+* 	T *m_data;
+* 
+* public:
+* 	Array()
+* 	{
+* 		m_length = 0;
+* 		m_data = nullptr;
+* 	}
+* 	Array(int length)
+* 	{
+* 		m_data = new (std::nothrow) T[length];
+* 		assert(m_data != nullptr);
+* 		m_length = length;
+* 	}
+* 	~Array()
+* 	{
+* 		delete[] m_data;
+* 	}
+* 
+* 	void Erase() {
+* 		delete[] m_data;
+* 		m_data = nullptr;
+* 		m_length = 0;
+* 	}
+* 
+* 	T &operator[] (int index) {
+* 		assert(index >= 0 && index < m_length);
+* 		return m_data[index];
+* 	}
+* 
+* 	int getLength();
+* };
+* 
+* 1) Array.cpp: // ошибка линкера
+* #include "Array.h"
+* 
+* template <typename T>
+* int Array<T>::getLength() { return m_length; }
+* 
+* Причина:
+*	a) Когда подключаем .h в main.cpp, то определение шаблона копируется в файл.
+*	б) main.cpp видит, что нужны два экземпляра шаблона класса Array<int> и Array<double>,
+*		он создаст их, затем скомпилирует весь код как часть файла main.cpp 
+*	в) Однако, когда дело дойдет до Array.cpp, компилятор забудет, что мы использовали
+*		Array<int> и Array<double> в main.cpp и не создаст экземпляр шаблона функции
+*		getLength();
+* 
+* 2) Поместить код из Array.cpp в Array.h ниже класса. // ок
+*	+ простота
+*	- увеличит время компиляции и линкинга файлов, если .h используется во многих местах
+* 
+* 3) Подход трех файлов		// У меня не получилось, в любом случае происходит копипаст кода в .h, используем (2)
+* Определить шаблон класса в .h
+* Определить методы шаблонов в .cpp
+* Необходимые экземпляры поместить в .cpp (inline)
+* 
+* 
+* @.'Параметр non-type' - специальный параметр шаблона, который заменяется конкретным 'значением'
+*		а ни типом данных.
+*	Может быть:
+*		Целочисленное значение или перечисление
+*		Указатель или ссылка на объект класса
+*		Указатель или ссылка на функцию
+*		Указатель или ссылка на метод класса
+*		std::nullptr_t
+* Пример
+* template <class T, int size>
+* 
+* 
+* @.'Явная специализация шаблона' - переопределение отдельной реализации шаблона
+* 
+* 'Шаблона функции'
+*	! Данный пример без параметра, т.к. явно указываем нужный тип данных
+* Пример
+* template<>
+* void Repository<double>::print() {	// работая с double хотим вывод в экспоненциальной записи
+*	std::cout << std::scientific << m_value << '\n'
+* }
+* 
+* 'Шаблона класса'
+* Пример
+* template<>
+* class Repository8<bool>	// специализируем шаблон для работы с типом bool
+* {
+* private:
+*	unsigned char m_data;
+* 
+* public:
+*	Repository() : m_data(0)
+*	{
+*	}
+*	void set(int index, bool value) {
+*		unsigned char mask = 1 << index;
+*		if (value)
+*			m_data |= mask;
+*		else
+*			m_data &= ~mask;
+*	}
+* 
+*	bool get(int index)	{
+*		unsigned char mask = 1 << index;
+*		return (m_data & mask) != 0;
+*	}
+* }
+* 
+* 
+* @.'Частичная специализация шаблона' - позволяет выполнить специализацию шаблона класса,
+*		где некоторые параметры шаблона явно определены.
+*	
+*	! С++14: может использоваться только с классами, но не с отдельными функциями 
+*		(для них полная специализация)
+*
+* Пример
+* template <typename T, int size>
+* void print(StaticArray<T, size> &array)
+* {
+*	for (int count = 0; count < size; ++count)
+*		std::cout << array[count] << ' ';
+* }
+* 
+* template <int size>
+* void print(StaticArray<char, size> &array)
+* {
+*	for (int count = 0; count < size; ++count)
+*		std::cout << array[count] << ' ';
+* }
+
+#endif // Шаблоны
+
 
 #include <iostream>
 #include <string>
@@ -4531,37 +4707,5 @@
 #include <initializer_list>
 #include "constants.h"
 
-
-
-
-#include "Circle.h"
-#include "Triangle.h"
-
-int getLargestRadius(const std::vector<Shape *> &v) {
-	int largestRadius{};
-	for (auto const &el : v)
-	{
-		if (Circle *c = dynamic_cast<Circle *>(el))
-		{
-			if (c->getRadius() > largestRadius)
-				largestRadius = c->getRadius();
-		}
-	}
-
-	return largestRadius;
-}
-
 int main() {
-	std::vector<Shape*> v;
-	v.push_back(new Circle(Point(1, 2, 3), 7));
-	v.push_back(new Circle(Point(4, 5, 6), 3));
-	v.push_back(new Triangle(Point(1, 2, 3), Point(4, 5, 6), Point(7, 8, 9)));
-
-	for (auto const &el : v)
-		std::cout << *el << '\n';
-
-	std::cout << "The largest radius is: " << getLargestRadius(v) << '\n';
-
-	for (auto const &el : v)
-		delete el;
 }
