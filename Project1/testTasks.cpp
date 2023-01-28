@@ -917,6 +917,48 @@
 */
 #endif // Итоговый тест №13
 
+#ifdef Итоговый тест №14
+/*
+* 'Задание 1'
+* Напишите класс Fraction, конструктор которого принимает числитель и знаменатель.
+*	Если пользователь передал в качестве знаменателя 0, то выбрасывайте исключение
+*	типа std::runtime_error (которое находится в заголовочном файле stdexcept). В
+*	функции main() попросите пользователя ввести два целых числа. Если числа,
+*	которые ввел пользователь, корректные, то выводите создаваемый объект класса
+*	Fraction. Если же числа недопустимые, то вы должны обрабатывать исключение
+*	типа std::exception и сообщить пользователю, что он ввел некорректные данные.
+* 
+*	class Fraction
+*	{
+*	private:
+* 		int numerator, denominator;
+* 
+*	public:
+* 		Fraction(int numerator, int denominator)
+* 		{
+* 			try
+* 			{
+* 				if (numerator == 0) throw std::runtime_error("invalid numerator");
+* 				if (denominator == 0) throw std::runtime_error("invalid denominator");
+* 				this->numerator = numerator;
+* 				this->denominator = denominator;
+* 				std::cout << numerator << '/' << denominator << '\n';
+* 			}
+* 			catch (std::exception &e) {
+* 				std::cerr << "Your fraction has an " << e.what() << '\n';
+* 			}
+* 		}
+*	};
+* 
+*	int main() {
+* 		Fraction(1, 2);
+* 		Fraction(0, 2);
+* 		Fraction(1, 0);
+*	}
+*/
+#endif // Итоговый тест №14
+
+
 
 
 
