@@ -4955,6 +4955,497 @@
 
 #endif // Исключения.
 
+#ifdef Умные указатели и Семантика перемещения (auto_ptr)
+
+* @.'Умный указатель' - класс, предназначенный для управления динамически выделенной памятью и
+*	освобождения выделенной памяти при выходе объекта этого класса из области видимости.
+* 
+* @.'Семантика перемещения' - класс, вместо копирования, передает право собственности на объект
+*	см. пример с std::auto_ptr
+* 
+* @.'std::auto_ptr'
+* 
+* !	Недостатки:
+*	1. Item перемещен в параметр функции => будет уничтожен в конце функции.
+*		Появляется возможность разыменование нулевого указателя.
+*	2. auto_ptr выполняет очистку с помощью обычного delete
+*		Не работает с массивами
+*	3. Не очень хорошо работает с другими классами из Стандартной библиотеки.
+*		Классы из std:: предполагают, что они копируют элемент, а не используют перемещение.
+* 
+* Реализация:
+*	template<class T>
+*	class Auto_ptr1
+*	{
+*	private:
+*		T *m_ptr;
+*	public:
+*		Auto_ptr1(T *ptr = nullptr)
+*			: m_ptr(ptr)
+*		{
+*		}
+*	
+*		~Auto_ptr1()
+*		{
+*			delete m_ptr;
+*		}
+*	
+*		T &operator*() const { return *m_ptr; }
+*		T *operator->() const { return m_ptr; }
+*	
+*		Auto_ptr1(Auto_ptr1 &a)
+*		{
+*			m_ptr = a.m_ptr;
+*			a.m_ptr = nullptr;
+*		}
+*	
+*		Auto_ptr1 &operator=(Auto_ptr1 &a)
+*		{
+*			if (&a == this)
+*				return *this;
+*	
+*			delete m_ptr;
+*			m_ptr = a.m_ptr;
+*			a.m_ptr = nullptr;
+*			return *this;
+*		}
+*	
+*		bool isNull() const { return m_ptr == nullptr; }
+*	};
+* 
+*	class Item
+*	{
+*	public:
+*		Item() { std::cout << "Item acquired" << '\n'; }
+*		~Item() { std::cout << "Item destroyed" << '\n'; }
+*	};
+* 
+*	int main() {
+*		Auto_ptr1<Item> item1(new Item);
+*		Auto_ptr1<Item> item2;
+*	
+*		std::cout << "item1 is " << (item1.isNull() ? "null\n" : "not null\n");
+*		std::cout << "item2 is " << (item2.isNull() ? "null\n" : "not null\n");
+*	
+*		item2 = item1;
+*	
+*		std::cout << "Ownership transferred" << '\n';
+*	
+*		std::cout << "item1 is " << (item1.isNull() ? "null\n" : "not null\n");
+*		std::cout << "item2 is " << (item2.isNull() ? "null\n" : "not null\n");
+*	}
+* 
+* !.'Правило:' std::auto_ptr устарел и не должен использоваться.
+*	Используйте вместо него std::unique_ptr или std::shared_ptr
+
+#endif // Умные указатели и Семантика перемещения
+
+#ifdef Ссылки r-value
+
+* О l-value проще всего думать, как о функции, объекте или переменной
+*	(или выражении, результатом которого является функция, объект или переменная),
+*	'которая имеет свой адрес памяти.'
+* 
+* В С++ добавляют ключевое слово const
+*	и l-value разделились на 2 категории:
+*		Модифицируемые: можно изменить (переменной x присвоить другое значение)
+*		Немодифицируемые: являются const (константа PI)
+* 
+* 
+* О r-value проще всего думать, как обо всем остальном, что не является l-value.
+*	Это литералы, временные значения, анонимные объекты.
+*	'Имеют область видимости выражения и им нельзя что-либо присвоить.'
+* 
+* @.'Ссылки r-value' - Ссылки, которые инициализируются только значениями r-values.
+*	+ Увеличивают продолжительность жизни обеъкта, которым инициализируются, до продолжительности
+*		жизни ссылки r-value
+*	+ Не const ссылки r-value позволяют изменять значения r-values, на которые указывают ссылки r-value
+* Пример
+* int &lref = x;	// Ссылка l-value
+* int &&rref = 7;	// Ссылка r-value
+* Еще пример
+* void fun(const int &lref) { ... }
+* void fun(int &&rref) { ... }
+*
+* Тест:
+* int x;
+* 
+* int &ref1 = x;		// всё ок
+* int &ref2 = 7;		// ошибка компиляции
+* const int &ref3 = x;	// всё ок
+* const int &ref4 = 7;	// всё ок
+* int &&ref5 = x;		// ошибка компиляции
+* int &&ref6 = 7;		// всё ок
+* const int &&ref7 = x;	// ошибка компиляции
+* const int &&ref8 = 7;	// всё ок
+*
+* // _______________________ (skip)
+*
+* Для поддержки семантики перемещения ввели 3 новые категории значений: (C++11)
+*	pr-values;
+*	x-values;
+*	gl-values;
+* 
+* @.'pr-value' - Выражение, вычисление которого вычисляет:
+*		значение операнда встроенного оператора
+*		инициализирует объект
+*	Чистое r-value
+*		! Не может иметь неполный тип
+*		! Не может иметь тип абстрактного класса или его массива
+*		! Не может быть полиморфным
+*	Следующие выражения являются pr-value:
+*		литерал
+*		вызов функции/перегруженный оператор (не возвращающий ссылку)
+*		a + b, a % b, a & b, a << b
+*		a && b, a || b, a >= b
+*		&a
+*		a++, a--
+*		a.m
+*		p->m
+*		p->*,p
+*		a, b (здесь b-rvalue)
+*		a ? b : c
+*		приведение не к ссылочному типу static_cast<double>(x)
+*		*this
+*		enum
+*		параметр шаблона T (тут есть странные условия C++20)
+*		лямбда-выражение C++11 [](int x){ return x * x; }
+*		выражение requires C++20 requires (T i) { typename T::type; };
+*		специализация концепта C++20 std::equality_comparable<int>
+* 
+* @.'x-value' - 
+*	Следующие выражения являются x-value:
+*		вызов функции / перегруженный оператор (возвращающий ссылку)
+*		a[n]
+*		a.m
+*		a.*mp
+*		a ? b : c
+* 
+* @.'gl-value' - Выражение, оценка которого определяет идентичность объекта или функции
+*	Либо l-value, либо x-value
+*	Может быть неявно преобразовано в pr-value, с помощью:
+*		l-value в r-value
+*		массив-в-указатель
+*		функция-в-указатель
+* 
+* // _______________________ (skip)
+
+#endif // Ссылки r-value
+
+#ifdef Конструктор перемещение и Оператор присваивания перемещением (auto_ptr)
+
+* Изменим прошлый auto_ptr, применяя семантику перемещения.
+* (На самом деле это уже будет std::unique_ptr)
+*	template<class T>
+*	class Auto_ptr1
+*	{
+*	private:
+*		T *m_ptr;
+*	public:
+*		Auto_ptr1(T *ptr = nullptr)
+*			: m_ptr(ptr)
+*		{
+*		}
+*	
+*		~Auto_ptr1()
+*		{
+*			delete m_ptr;
+*		}
+*	
+*		Auto_ptr1(const Auto_ptr1 &a) = delete;
+*		Auto_ptr1(Auto_ptr1 &&a)
+*		{
+*			a.m_ptr = nullptr;
+*		}
+*	
+*		Auto_ptr1 &operator=(const Auto_ptr1 &a) = delete;
+*		Auto_ptr1 &operator=(Auto_ptr1 &&a)
+*		{
+*			if (&a == this)
+*				return *this;
+*	
+*			delete m_ptr;
+*	
+*			m_ptr = a.m_ptr;
+*			a.m_ptr = nullptr;
+*	
+*			return *this;
+*		}
+*	
+*		T &operator*() const { return *m_ptr; }
+*		T *operator->() const { return m_ptr; }
+*		bool isNull() const { return m_ptr == nullptr; }
+*	};
+* 
+* !.'Правило:' Если вам нужен конструктор перемещения и оператор присваивания
+*		перемещением, которые выполняют перемещение (а не копирование), то вам их
+*		нужно предоставить (написать) самостоятельно.
+
+#endif // Конструктор перемещение и Оператор присваивания перемещением
+
+#ifdef std::move()
+
+* @.'std::move' - конвертирует аргумент в r-value
+*	находится в #include <utility>
+* ! Выгодно, когда перемещаемый объект не нужен
+* Пример
+* int main() {
+*	std::vector<std::string> v;
+*	std::string str = "Bye";
+*
+*	std::cout << "*Copying str*" << '\n';
+*
+*	v.push_back(str);
+*	std::cout << "str: " << str << '\n';
+*	std::cout << "vector: " << v[0] << '\n';
+*
+*	std::cout << '\n' << "*Moving str*" << '\n';
+*
+*	v.push_back(std::move(str)); // вектор крадет значение str, вместо его копирования
+*	std::cout << "str: " << str << '\n';
+*	std::cout << "vector: " << v[0] << ' ' << v[1] << '\n';
+* }
+* Результат
+*	*Copying str*
+*	str: Bye
+*	vector: Bye
+* 
+*	*Moving str*
+*	str:
+*	vector: Bye Bye
+
+#endif // std::move()
+
+#ifdef std::unique_ptr std::make_unique()
+
+* @.'std::unique_ptr' - как std::auto_ptr, но использует семантику перемещения и более защищен
+*		Находится в #include <memory>
+* Часто используется
+*	+ std::unique_ptr неявно преобразовывается в bool, возвращая true, если владеет ресурсом.
+*	+ Знает когда применить delete, когда delete[]
+*	+ Используем .get() чтобы получить необработанный указатель из std::unique_ptr
+* 
+*	! Не позволяйте нескольким классам 'владеть' одним и тем же ресурсом
+*	! Не удаляйте выделенный ресурс вручную из-под std::unique_ptr
+* Пример
+* std::unique_ptr<Fraction> f1 = std::make_unique<Fraction>(7, 9);
+* std::cout << *f1 << '\n';
+* 
+* !.'Правило:' Используйте std::vector вместо использования умного указателя,
+*		который владеет динамическим массивом.
+* 
+* @.'std::make_unique()' - шаблон функции, который создает объект типа шаблона и инициализирует
+*		его аргументами, переданными в функцию. (С++14)
+* auto f2 = std::make_unique<Fraction[]>(5);
+* std::cout << f2[0] << '\n';
+* 
+* !.'Правило:' Используйте функцию std::make_unique() вместо создания умного указателя
+*		std::unique_ptr и использования оператора new
+
+#endif std::unique_ptr std::make_unique
+
+#ifdef Умный указатель std::shared_ptr std::make_shared()
+
+* @.'std::shared_ptr' - для случаев, когда несколько умных указателей совместно владеют одним
+*		динамически выделенным ресурсом.
+*		Находится в #include <memory>
+*	! Начиная с С++17 добавили поддержку динамических массивов (но не в std::make_shared())
+*	shared_ptr отслеживает количество владельцев
+*	До тех пор, пока хотя бы один владеет ресурсом, этот ресурс не будет уничтожен,
+*		даже если удалить все остальные std::shared_ptr (которые также владеют этим ресурсом)
+* Пример 
+* int main() {
+*	Item *item = new Item;
+*	std::shared_ptr<Item> ptr1(item);
+*	{
+*		std::shared_ptr<Item> ptr2(item);
+*		std::cout << "Killing one shared pointer" << '\n';
+*	}
+*	std::cout << "Killing another shared pointer" << '\n';
+* }
+* // ЛОВИМ ИСКЛЮЧЕНИЕ!
+* В этом случае два shared_ptr не знают о существовании друг друга!
+* 
+* !.'Правило:' Всегда выполняйте копирование существующего std::shared_ptr, если
+*		вам нужно более одного std::shared_ptr, указывающего на один и тот же
+*		динамически выделенный ресурс.
+* 
+* @.'std::make_shared()' - шаблон функции, для shared_ptr
+* Пример
+* int main() {
+*	auto ptr1 = std::make_shared<Item>();
+*	{
+*		auto ptr2 = ptr1; // используем семантику копирования
+*		std::cout << "Killing one shared pointer" << '\n';
+*	}
+*	std::cout << "Killing another shared pointer" << '\n';
+* }	
+
+#endif // Умный указатель std::shared_ptr
+
+#ifdef std::weak_ptr
+
+* @.'Циклическая зависимость' - серия ссылок, где текущий объект ссылается на следующий,
+*		а последний объект ссылается на первый.
+* 
+* @.'std::weak_ptr' - как std::shared_ptr, но защищен от циклической зависимости
+*	! нет оператора ->; конвертируйте в shared_ptr при помощи метода .lock()
+* 
+* class Human
+* {
+* 	std::string m_name;
+* 	std::weak_ptr<Human> m_partner;
+* 
+* public:
+* 	Human(const std::string &name):
+* 		m_name(name)
+* 	{
+* 		std::cout << m_name << " created" << '\n';
+* 	}
+* 	~Human()
+* 	{
+* 		std::cout << m_name << " destroyed" << '\n';
+* 	}
+* 
+* 	friend bool partnerUp(std::shared_ptr<Human> &h1, std::shared_ptr<Human> &h2) {
+* 		if (!h1 || !h2)
+* 			return false;
+* 
+* 		h1->m_partner = h2;
+* 		h2->m_partner = h1;
+* 
+* 		std::cout << h1->m_name << " is now partnered with " << h2->m_name << '\n';
+* 		return true;
+* 	}
+* };
+* 
+* int main() {
+* 	auto anton = std::make_shared<Human>("Anton");
+* 	auto ivan = std::make_shared<Human>("Ivan");
+* 	partnerUp(anton, ivan);
+* }
+
+#endif // std::weak_ptr
+
+#ifdef Стандартная библиотека STL
+
+* 'Контейнеры STL'
+*	Делятся на 3 категории:
+*		последовательные
+*		ассоциативные
+*		адаптеры
+* 
+* @.'Контейнеры последовательности' - Контейнерные классы, элементы которых находятся в последовательности.
+* std::vector
+* std::array
+* std::deque
+* std::list
+* std::forward_list
+* std::basic_string
+* 
+* @.'Ассоциативные контейнеры' - Контейнерные классы, которые автоматически сортируют все свои элементы.
+*	По умолчанию используют оператор сравнения <
+* set
+* multiset
+* map
+* multimap
+* 
+* @.'Адаптеры' - Специальные предопределенные контейнерные классы, которые адаптированы
+*	для выполнения конкретных заданий.
+* stack (LIFO)
+* queue (FIFO)
+* priority_queue
+* 
+* 
+* 'Итераторы STL'
+*	Операторы
+*		* - возвращает элемент, на который указывает итератор
+*		++ - перемещает итератор к следующему элементу
+*		== и != - указывают ли оба итератора на один и тот же элемент?
+*		= - присваивает итератору новую позицию
+*	Методы
+*		begin()
+*		end()
+*		cbegin()
+*		cend()
+* container::iterator - итератор для чтения/записи
+* container::const_iterator - итератор только для чтения
+* 
+* 
+* 'Алгоритмы STL'
+* min_element()
+* max_element()
+* find()
+* list::insert()
+* sort()
+* reverse()
+* 
+* 
+* 'std::string'
+* std::string - для стандартных ASCII-строк
+* std::wstring - для Unicode-строк (UTF-16)
+* 
+* Создание и удаление:
+*	конструктор/деструктор
+* 
+* Размер и ёмкость:
+*	capacity()		- возвращает кол-во символов, которое строка может хранить
+*	empty()			- является ли строка пустой?
+*	length(), size() - возвращает кол-во сивмолов в строке
+*	max_size()		- возвращает размер строки, который может быть выделен
+*	reserve()		- расширяет/уменьшает ёмкость строки
+* 
+* Доступ к элементам:
+*[], at()
+*
+*Изменение
+*=, assing() - присваивание
+* +=, append(), push_back() - добавление символов к концу строки
+* insert() - вставляет символы в произвольный индекс строки
+* clear() - удаляет все символы строки
+* erase() - удаляет символы по произвольному индексу строки
+* replace() - заменяет символы произвольных индексов строки другими символами
+* resize() - расширяет или уменьшает строку
+* swap() - меняет местами значения двух строк
+*
+*Ввод / вывод
+* >> , getline() - считывание значения из входного потока в строку
+* << -запись значения строки в выходной поток
+* c_str() - конвертирует строку в строку с C - style(с '\0' в конце)
+* copy() - копирует содержимое строки(без '\0') в массив типа char
+*data() - возвращает содержимое строки в виде массива типа char(без '\0')
+*
+*Сравнение
+* == , != -равны ? возвращает bool
+*<, <= , >, >= -больше, меньше друг друга ? возвращает bool
+*compare() - равны ? возвращает - 1, 0 или 1
+*
+*Поиск
+* find - ищет индекс первого символа / подстроки
+* find_first_of - ищет индекс первого символа из набора символов
+* find_first_not_of - ищет индекс первого символа НЕ из набора символов
+* find_last_of - ищет индекс последнего символа из набора символов
+* find_last_not_of - ищет индекс последнего символа НЕ из набора символов
+* rfind - ищет индекс последнего символа / подстроки
+*
+*Поддержка итераторов и распределителей
+* begin(), end() - возвращает прямой итератор, указывающий на первый и последний
+*элемент строки
+*get_allocator() - возвращает распределитель
+* rbegin(), rend() - возвращает обратный итератор, указывающий на последний и первый
+*элементы строки(в обратную стророну)
+
+#endif // Стандартная библиотека шаблонов (STL)
+
+#ifdef Параллелизм (Потоки)
+/*
+* @.'Поток' - представление задачи на системном уровне
+*
+* Задача, которую предстоит выполнить параллельно иным задачам, запускается на выполнение
+*	конструированием объекта std::thread (в #include <thread>)
+*/
+#endif // Параллелизм (Потоки)
+
 
 #include <iostream>
 #include <string>
@@ -4973,32 +5464,9 @@
 #include <cmath>
 #include <initializer_list>
 #include <exception>
-#include "constants.h"
+#include <thread>
+#include <list>
+#include <Windows.h>
+#include <future>
 
-class Fraction
-{
-private:
-	int numerator, denominator;
-
-public:
-	Fraction(int numerator, int denominator)
-	{
-		try
-		{
-			if (numerator == 0) throw std::runtime_error("invalid numerator");
-			if (denominator == 0) throw std::runtime_error("invalid denominator");
-			this->numerator = numerator;
-			this->denominator = denominator;
-			std::cout << numerator << '/' << denominator << '\n';
-		}
-		catch (std::exception &e) {
-			std::cerr << "Your fraction has an " << e.what() << '\n';
-		}
-	}
-};
-
-int main() {
-	Fraction(1, 2);
-	Fraction(0, 2);
-	Fraction(1, 0);
-}
+ int main() {}
